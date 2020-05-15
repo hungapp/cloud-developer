@@ -40,7 +40,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.patch('/:id', 
     requireAuth, 
     async (req: Request, res: Response) => {
-        //@TODO try it yourself
+        //try it yourself
         const {id} = req.params;
         try {
           const updatedItem = await FeedItem.update({}, {where: {id: id}});
@@ -56,9 +56,9 @@ router.patch('/:id',
 router.get('/signed-url/:fileName', 
     requireAuth, 
     async (req: Request, res: Response) => {
-    let { fileName } = req.params;
-    const url = AWS.getPutSignedUrl(fileName);
-    res.status(201).send({url: url});
+      let { fileName } = req.params;
+      const url = AWS.getPutSignedUrl(fileName);
+      res.status(201).send({url: url});
 });
 
 // Post meta data and the filename after a file is uploaded 
