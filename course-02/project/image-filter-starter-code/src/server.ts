@@ -64,7 +64,7 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
     }
   })
   const uploadImage = multer({ storage: storage }).single('image');
-
+  // Image upload endpoint
   app.post('/filteredimage', uploadImage , async (req, res) => {
     const image = await req.file;
     if (!image) {
