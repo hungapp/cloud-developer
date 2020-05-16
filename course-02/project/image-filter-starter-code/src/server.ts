@@ -2,6 +2,7 @@ import express, {Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
 (async () => {
@@ -57,7 +58,12 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Set Storage
   const storage = multer.diskStorage({
     destination: (req, file, callback) => {
-      callback(null, path.join(__dirname, '/uploads/'))
+      fs.mkdir(path.join(__dirname, 'uploads'), err => {
+        if (err) {
+          return console.log(err);
+        }
+        callback(null, path.join(__dirname, 'uploads'));
+      });
     },
     filename: (req, file, callback) => {
       callback(null, file.originalname)
