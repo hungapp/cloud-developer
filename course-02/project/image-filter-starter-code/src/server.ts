@@ -1,5 +1,7 @@
 import express, {Request, Response} from 'express';
 import bodyParser from 'body-parser';
+import multer from 'multer';
+import path from 'path';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
 (async () => {
@@ -35,7 +37,8 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       return res.status(400).send('Image url is required');
     }
     try {
-      const filteredImagePath = await filterImageFromURL(image_url);     
+      const filteredImagePath = await filterImageFromURL(image_url);    
+      console.log(filterImageFromURL); 
       let filteredImages : string[] = [];
       filteredImages.push(filteredImagePath);
       return res.status(200).sendFile(filteredImagePath, (err) => {
@@ -49,6 +52,41 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       return res.status(501).send(`${err}`);
     }
   })
+  
+
+  // Set Storage
+  const storage = multer.diskStorage({
+    destination: (req, file, callback) => {
+      callback(null, path.join(__dirname, '/uploads/'))
+    },
+    filename: (req, file, callback) => {
+      callback(null, file.originalname)
+    }
+  })
+  const uploadImage = multer({ storage: storage }).single('image');
+
+  app.post('/filteredimage', uploadImage , async (req, res) => {
+    const image = await req.file;
+    if (!image) {
+      const err = new Error('Image not found');
+      return res.status(400).send(err);
+    }
+    try {
+      const filteredImagePath = await filterImageFromURL(image.path);     
+      let tempImages : string[] = [];
+      tempImages.push(filteredImagePath, image.path);
+      return res.status(200).sendFile(filteredImagePath, (err) => {
+        if (err) {
+          throw err;
+        }
+        deleteLocalFiles(tempImages);
+      })
+    } catch (err){
+      return res.status(501).send(`${err}`);
+    }
+  })
+  
+
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
