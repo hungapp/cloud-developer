@@ -58,21 +58,21 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Set Storage
   const storage = multer.diskStorage({
     destination: (req, file, callback) => {
-      fs.mkdir(path.join(__dirname, 'uploads'), err => {
-        if (err) {
-          return console.log(err);
-        }
-        callback(null, path.join(__dirname, 'uploads'));
-      });
+      const dir = './uploads';
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+      }
+      callback(null, './uploads');
     },
     filename: (req, file, callback) => {
       callback(null, file.originalname)
     }
   })
   const uploadImage = multer({ storage: storage }).single('image');
+  
   // Image upload endpoint
   app.post('/filteredimage', uploadImage , async (req, res) => {
-    const image = await req.file;
+    const image = req.file;
     if (!image) {
       const err = new Error('Image not found');
       return res.status(400).send(err);
