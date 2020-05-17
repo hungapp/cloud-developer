@@ -88,9 +88,15 @@
 	],
 	"variable": [
 		{
-			"id": "235def90-8b61-4816-bda2-faa36dc2562b",
+			"id": "3cbd0769-85bf-4e37-994d-f137ff115fc0",
 			"key": "HOST",
 			"value": "localhost:8082",
+			"type": "string"
+		},
+		{
+			"id": "9f4cd4dd-12ce-4abf-9faa-5c7f32062ebf",
+			"key": "LOCALHOST",
+			"value": "http://localhost:8082",
 			"type": "string"
 		}
 	],
