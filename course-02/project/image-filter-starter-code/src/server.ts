@@ -1,18 +1,17 @@
-import express, {Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
 (async () => {
-
   // Init the Express application
   const app = express();
 
   // Set the network port
   const port = process.env.PORT || 8082;
-  
+
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
@@ -33,27 +32,25 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   //! END @TODO1
   app.get('/filteredimage', async (req: Request, res: Response) => {
-    let {image_url} = req.query;
+    let { image_url } = req.query;
     if (!image_url) {
       return res.status(400).send('Image url is required');
     }
     try {
-      const filteredImagePath = await filterImageFromURL(image_url);    
-      console.log(filterImageFromURL); 
-      let filteredImages : string[] = [];
+      const filteredImagePath = await filterImageFromURL(image_url);
+      console.log(filterImageFromURL);
+      let filteredImages: string[] = [];
       filteredImages.push(filteredImagePath);
       return res.status(200).sendFile(filteredImagePath, (err) => {
         if (err) {
           throw err;
         }
         deleteLocalFiles(filteredImages);
-      })
-    } 
-    catch (err){
+      });
+    } catch (err) {
       return res.status(501).send(`${err}`);
     }
-  })
-  
+  });
 
   // Set Storage
   const storage = multer.diskStorage({
@@ -65,44 +62,44 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       callback(null, './uploads');
     },
     filename: (req, file, callback) => {
-      callback(null, file.originalname)
-    }
-  })
+      callback(null, file.originalname);
+    },
+  });
   const uploadImage = multer({ storage: storage }).single('image');
-  
+
   // Image upload endpoint
-  app.post('/filteredimage', uploadImage , async (req, res) => {
+  app.post('/filteredimage', uploadImage, async (req, res) => {
     const image = req.file;
     if (!image) {
       const err = new Error('Image not found');
       return res.status(400).send(err);
     }
     try {
-      const filteredImagePath = await filterImageFromURL(image.path);     
-      let tempImages : string[] = [];
+      const filteredImagePath = await filterImageFromURL(image.path);
+      let tempImages: string[] = [];
       tempImages.push(filteredImagePath, image.path);
       return res.status(200).sendFile(filteredImagePath, (err) => {
         if (err) {
           throw err;
         }
         deleteLocalFiles(tempImages);
-      })
-    } catch (err){
+      });
+    } catch (err) {
       return res.status(501).send(`${err}`);
     }
-  })
-  
+  });
 
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
-    res.send("try GET /filteredimage?image_url={{}} <br/> or POST /filteredimage with an image in req body")
-  } );
-  
+  app.get('/', async (req, res) => {
+    res.send(
+      'try GET /filteredimage?image_url={{}} <br/> or POST /filteredimage with an image in req body'
+    );
+  });
 
   // Start the Server
-  app.listen( port, () => {
-      console.log( `server running http://localhost:${ port }` );
-      console.log( `press CTRL+C to stop server` );
-  } );
+  app.listen(port, () => {
+    console.log(`server running http://localhost:${port}`);
+    console.log(`press CTRL+C to stop server`);
+  });
 })();
