@@ -1,0 +1,3 @@
+[submodule "course-03"]
+	path = course-03
+	url = git@github.com:hungdzai/nd9990-c3-microservices-exercises.git
