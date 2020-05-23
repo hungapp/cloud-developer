@@ -15,9 +15,14 @@ exports.handler = async (event) => {
   let requestWasSuccessful;
 
   const startTime = timeInMs();
-  const res = await axios.get(url);
-  res ? (requestWasSuccessful = true) : (requestWasSuccessful = false);
-  endTime = timeInMs();
+  try {
+    await axios.get(url);
+    requestWasSuccessful = true;
+  } catch (e) {
+    requestWasSuccessful = false;
+  } finally {
+    endTime = timeInMs();
+  }
 
   await cloudwatch
     .putMetricData({
@@ -26,23 +31,23 @@ exports.handler = async (event) => {
           MetricName: 'Succesful',
           Dimensions: [
             {
-              Name: serviceName,
-              Value: requestWasSuccessful,
+              Name: 'ServiceName',
+              Value: serviceName,
             },
           ],
           Unit: 'Count',
-          Value: 0,
+          Value: requestWasSuccesful ? 1 : 0,
         },
         {
           MetricName: 'Latency',
           Dimensions: [
             {
-              Name: serviceName,
-              Value: endTime - startTime,
+              Name: 'ServiceName',
+              Value: serviceName,
             },
           ],
           Unit: 'Miliseconds',
-          Value: 0,
+          Value: endTime - startTime,
         },
       ],
       Namespace: 'Udacity/Serverless',
