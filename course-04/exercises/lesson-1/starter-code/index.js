@@ -55,7 +55,7 @@ exports.handler = async (event) => {
             },
           ],
           Unit: 'Milliseconds',
-          Value: totalTime,
+          Value: endTime - startTime,
         },
       ],
       Namespace: 'Udacity/Serveless',
