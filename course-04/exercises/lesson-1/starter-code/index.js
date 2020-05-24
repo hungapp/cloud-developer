@@ -38,14 +38,6 @@ exports.handler = async (event) => {
           Unit: 'Count',
           Value: requestWasSuccessful ? 1 : 0,
         },
-      ],
-      Namespace: 'Udacity/Serveless',
-    })
-    .promise();
-
-  await cloudwatch
-    .putMetricData({
-      MetricData: [
         {
           MetricName: 'Latency',
           Dimensions: [
@@ -55,7 +47,7 @@ exports.handler = async (event) => {
             },
           ],
           Unit: 'Milliseconds',
-          Value: endTime - startTime,
+          Value: totalTime,
         },
       ],
       Namespace: 'Udacity/Serveless',
