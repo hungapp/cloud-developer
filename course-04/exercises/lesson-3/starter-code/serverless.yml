@@ -8,7 +8,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
@@ -28,6 +28,7 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Query
+        - dynamodb:PutItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.IMAGES_TABLE}
     - Effect: Allow
       Action:
@@ -45,9 +46,11 @@ custom:
       - name: GroupRequest
         contentType: application/json
         schema: ${file(models/create-group-request.json)}
+      - name: ImageRequest
+        contentType: application/json
+        schema: ${file(models/create-image-request.json)}
 
 functions:
-
   GetGroups:
     handler: src/lambda/http/getGroups.handler
     events:
@@ -63,7 +66,7 @@ functions:
           method: post
           path: groups
           cors: true
-          reqValidatorName: RequestBodyValidator
+          reqValidatorName: RequestBodyValidator # ref to use a validator in Resources
           documentation:
             summary: Create a new group
             description: Create a new group
@@ -78,8 +81,26 @@ functions:
           path: groups/{groupId}/images
           cors: true
 
+  GetImage:
+    handler: src/lambda/http/getImage.handler
+    events:
+      - http:
+          method: get
+          path: images/{imageId}
+          cors: true
   CreateImage:
     handler: src/lambda/http/createImage.handler
+    events:
+      - http:
+          method: post
+          path: groups/{groupId}/images
+          cors: true
+          reqValidatorName: RequestBodyValidator # ref to use a validator in Resources
+          documentation:
+            summary: Creat a new image
+            description: Create a new image
+            requestModels:
+              'application/json': ImageRequest
 
 resources:
   Resources:
@@ -96,7 +117,7 @@ resources:
         TableName: ${self:provider.environment.GROUPS_TABLE}
 
     ImagesDynamoDBTable:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
           - AttributeName: groupId
@@ -115,8 +136,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.IMAGE_ID_INDEX}
             KeySchema:
-            - AttributeName: imageId
-              KeyType: HASH
+              - AttributeName: imageId
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
 
@@ -128,4 +149,3 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
-

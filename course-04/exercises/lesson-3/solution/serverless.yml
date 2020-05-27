@@ -8,7 +8,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
@@ -51,7 +51,6 @@ custom:
         schema: ${file(models/create-image-request.json)}
 
 functions:
-
   GetGroups:
     handler: src/lambda/http/getGroups.handler
     events:
@@ -111,7 +110,7 @@ resources:
         TableName: ${self:provider.environment.GROUPS_TABLE}
 
     ImagesDynamoDBTable:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
           - AttributeName: groupId
@@ -130,8 +129,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.IMAGE_ID_INDEX}
             KeySchema:
-            - AttributeName: imageId
-              KeyType: HASH
+              - AttributeName: imageId
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
 
@@ -143,4 +142,3 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
-
