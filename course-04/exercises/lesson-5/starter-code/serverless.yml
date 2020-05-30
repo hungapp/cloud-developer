@@ -8,7 +8,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
@@ -18,11 +18,11 @@ provider:
     IMAGES_TABLE: Images-${self:provider.stage}
     IMAGE_ID_INDEX: ImageIdIndex
     CONNECTIONS_TABLE: Connections-${self:provider.stage}
-    IMAGES_S3_BUCKET: serverless-udagram-images-${self:provider.stage}
+    IMAGES_S3_BUCKET: serverless-udagram-images-hung-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-    THUMBNAILS_S3_BUCKET: serverless-udagram-thumbnail-${self:provider.stage}
-    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
-    AUTH_0_SECRET_FIELD: auth0Secret
+    THUMBNAILS_S3_BUCKET: serverless-udagram-thumbnail-hung-${self:provider.stage}
+    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage} # name of the auth secret
+    AUTH_0_SECRET_FIELD: auth0Secret # name of a field within the secret
 
   iamRoleStatements:
     - Effect: Allow
@@ -48,18 +48,18 @@ provider:
     - Effect: Allow
       Action:
         - s3:PutObject
-      Resource: "arn:aws:s3:::${self:provider.environment.THUMBNAILS_S3_BUCKET}/*"
+      Resource: 'arn:aws:s3:::${self:provider.environment.THUMBNAILS_S3_BUCKET}/*'
     - Effect: Allow
       Action:
         - dynamodb:Scan
         - dynamodb:PutItem
         - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
-    - Effect: Allow
+    - Effect: Allow # allow secret manager to read a secret value from the secret resource
       Action:
         - secretsmanager:GetSecretValue
       Resource: !Ref Auth0Secret
-    - Effect: Allow
+    - Effect: Allow # allow to use the KMS key to decrypt the secret value
       Action:
         - kms:Decrypt
       Resource: !GetAtt KMSKey.Arn
@@ -81,7 +81,6 @@ custom:
         schema: ${file(models/create-image-request.json)}
 
 functions:
-
   RS256Auth:
     handler: src/lambda/auth/rs256Auth0Authorizer.handler
 
@@ -211,7 +210,7 @@ resources:
         TableName: ${self:provider.environment.GROUPS_TABLE}
 
     ImagesDynamoDBTable:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
           - AttributeName: groupId
@@ -232,8 +231,8 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.IMAGE_ID_INDEX}
             KeySchema:
-            - AttributeName: imageId
-              KeyType: HASH
+              - AttributeName: imageId
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
 
@@ -241,12 +240,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: id
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: id
+          - AttributeName: id
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.CONNECTIONS_TABLE}
@@ -271,8 +268,7 @@ resources:
               Topic: !Ref ImagesTopic
         CorsConfiguration:
           CorsRules:
-            -
-              AllowedOrigins:
+            - AllowedOrigins:
                 - '*'
               AllowedHeaders:
                 - '*'
@@ -289,7 +285,7 @@ resources:
       Properties:
         PolicyDocument:
           Id: MyPolicy
-          Version: "2012-10-17"
+          Version: '2012-10-17'
           Statement:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
@@ -302,14 +298,13 @@ resources:
       Type: AWS::SNS::TopicPolicy
       Properties:
         PolicyDocument:
-          Version: "2012-10-17"
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
-                AWS: "*"
+                AWS: '*'
               Action: sns:Publish
-              Resource:
-                !Ref ImagesTopic
+              Resource: !Ref ImagesTopic
               Condition:
                 ArnLike:
                   AWS:SourceArn: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}
@@ -353,7 +348,7 @@ resources:
     #           Action: 'es:*'
     #           Resource: '*'
 
-    KMSKey:
+    KMSKey: # kms key to encrypt the secret
       Type: AWS::KMS::Key
       Properties:
         Description: KMS key to encrypt Auth0 secret
@@ -366,10 +361,10 @@ resources:
               Principal:
                 AWS:
                   Fn::Join:
-                  - ':'
-                  - - 'arn:aws:iam:'
-                    - Ref: AWS::AccountId
-                    - 'root'
+                    - ':'
+                    - - 'arn:aws:iam:'
+                      - Ref: AWS::AccountId
+                      - 'root'
               Action:
                 - 'kms:*'
               Resource: '*'
@@ -380,10 +375,9 @@ resources:
         AliasName: alias/auth0Key-${self:provider.stage}
         TargetKeyId: !Ref KMSKey
 
-    Auth0Secret:
+    Auth0Secret: # secret manager's secret
       Type: AWS::SecretsManager::Secret
       Properties:
         Name: ${self:provider.environment.AUTH_0_SECRET_ID}
         Description: Auth0 secret
         KmsKeyId: !Ref KMSKey
-
