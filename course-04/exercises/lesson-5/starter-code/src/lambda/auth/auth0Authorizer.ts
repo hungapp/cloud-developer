@@ -1,13 +1,13 @@
-import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda';
-import 'source-map-support/register';
-import * as middy from 'middy';
-import { secretsManager } from 'middy/middlewares';
+import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
+import 'source-map-support/register'
+import * as middy from 'middy'
+import { secretsManager } from 'middy/middlewares'
 
-import { verify } from 'jsonwebtoken';
-import { JwtToken } from '../../auth/JwtToken';
+import { verify } from 'jsonwebtoken'
+import { JwtToken } from '../../auth/JwtToken'
 
-const secretId = process.env.AUTH_0_SECRET_ID;
-const secretField = process.env.AUTH_0_SECRET_FIELD;
+const secretId = process.env.AUTH_0_SECRET_ID
+const secretField = process.env.AUTH_0_SECRET_FIELD
 
 export const handler = middy(
   async (
@@ -18,8 +18,8 @@ export const handler = middy(
       const decodedToken = verifyToken(
         event.authorizationToken,
         context.secretId[secretField]
-      );
-      console.log('User was authorized', decodedToken);
+      )
+      console.log('User was authorized', decodedToken)
 
       return {
         principalId: decodedToken.sub,
@@ -33,9 +33,9 @@ export const handler = middy(
             },
           ],
         },
-      };
+      }
     } catch (e) {
-      console.log('User was not authorized', e.message);
+      console.log('User was not authorized', e.message)
 
       return {
         principalId: 'user',
@@ -49,21 +49,21 @@ export const handler = middy(
             },
           ],
         },
-      };
+      }
     }
   }
-);
+)
 
 function verifyToken(authHeader: string, secret: string): JwtToken {
-  if (!authHeader) throw new Error('No authentication header');
+  if (!authHeader) throw new Error('No authentication header')
 
   if (!authHeader.toLowerCase().startsWith('bearer '))
-    throw new Error('Invalid authentication header');
+    throw new Error('Invalid authentication header')
 
-  const split = authHeader.split(' ');
-  const token = split[1];
+  const split = authHeader.split(' ')
+  const token = split[1]
 
-  return verify(token, secret) as JwtToken;
+  return verify(token, secret) as JwtToken
 }
 
 handler.use(
@@ -75,4 +75,4 @@ handler.use(
       secretId, // field which middy use to store the secret
     },
   })
-);
+)

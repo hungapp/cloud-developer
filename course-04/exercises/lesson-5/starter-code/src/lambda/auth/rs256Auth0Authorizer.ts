@@ -1,8 +1,8 @@
-import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda';
-import 'source-map-support/register';
+import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
+import 'source-map-support/register'
 
-import { verify } from 'jsonwebtoken';
-import { JwtToken } from '../../auth/JwtToken';
+import { verify } from 'jsonwebtoken'
+import { JwtToken } from '../../auth/JwtToken'
 
 const cert = `-----BEGIN CERTIFICATE-----
 MIIDBTCCAe2gAwIBAgIJedRM4TrYzbbQMA0GCSqGSIb3DQEBCwUAMCAxHjAcBgNV
@@ -22,13 +22,13 @@ w3PsiTXY6Els1CSkmX14Xc8TCaJJFOFcFu4pdIxMP802dLZpH3RvZ0tlY+cXlfQ4
 L7+YbbpSTZBhtf0cTNOmlp0pqFeRDTzfgwtVCKr0fm6WyGrNTyXkTwOYzlXKkR8c
 iJm556O55Q+D4unGmv1EKQG2HXDkGQzRossw7U5G72RFFCR+wQTbMQ8iwuC9r6X5
 ct8hiTsDHVpb
------END CERTIFICATE-----`;
+-----END CERTIFICATE-----`
 export const handler = async (
   event: CustomAuthorizerEvent
 ): Promise<CustomAuthorizerResult> => {
   try {
-    const decodedToken: JwtToken = verifyToken(event.authorizationToken, cert);
-    console.log('User was authorized', decodedToken);
+    const decodedToken: JwtToken = verifyToken(event.authorizationToken, cert)
+    console.log('User was authorized', decodedToken)
 
     return {
       principalId: decodedToken.sub,
@@ -42,9 +42,9 @@ export const handler = async (
           },
         ],
       },
-    };
+    }
   } catch (e) {
-    console.log('User was not authorized', e.message);
+    console.log('User was not authorized', e.message)
 
     return {
       principalId: 'user',
@@ -58,20 +58,20 @@ export const handler = async (
           },
         ],
       },
-    };
+    }
   }
-};
+}
 
 function verifyToken(authHeader: string, cert: string): JwtToken {
-  if (!authHeader) throw new Error('No authentication header');
+  if (!authHeader) throw new Error('No authentication header')
 
   if (!authHeader.toLowerCase().startsWith('bearer '))
-    throw new Error('Invalid authentication header');
+    throw new Error('Invalid authentication header')
 
-  const split = authHeader.split(' ');
-  const token = split[1];
+  const split = authHeader.split(' ')
+  const token = split[1]
 
   return verify(token, cert, {
     algorithms: ['RS256'],
-  }) as JwtToken;
+  }) as JwtToken
 }
