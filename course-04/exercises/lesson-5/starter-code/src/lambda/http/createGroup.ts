@@ -3,7 +3,6 @@ import 'source-map-support/register'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
 import { createGroup } from '../../businessLogic/groups'
-import { CreateGroupRequest } from '../requests/CreateGroupRequest'
 import { CreateGroupRequest } from '../../requests/CreateGroupRequest'
 
 export const handler = middy(

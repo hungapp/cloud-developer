@@ -24,6 +24,10 @@ provider:
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage} # name of the auth secret
     AUTH_0_SECRET_FIELD: auth0Secret # name of a field within the secret
 
+  tracing:
+    lambda: true
+    apiGateway: true
+
   iamRoleStatements:
     - Effect: Allow
       Action:
